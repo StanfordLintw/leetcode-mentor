@@ -1,0 +1,117 @@
+// Prisma schema for LeetCode Mentor
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Category {
+  ARRAY
+  STRING
+  LINKED_LIST
+  TREE
+  GRAPH
+  DYNAMIC_PROGRAMMING
+  BACKTRACKING
+  BINARY_SEARCH
+  STACK_QUEUE
+  HASH_TABLE
+  MATH
+  TWO_POINTERS
+  SLIDING_WINDOW
+  GREEDY
+  HEAP
+  TRIE
+}
+
+enum SubmissionStatus {
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT
+  RUNTIME_ERROR
+  COMPILE_ERROR
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id          String         @id @default(cuid())
+  email       String         @unique
+  name        String?
+  createdAt   DateTime       @default(now())
+  submissions Submission[]
+  progress    UserProgress[]
+  studyPlans  StudyPlan[]
+}
+
+model Problem {
+  id              String         @id @default(cuid())
+  title           String
+  slug            String         @unique
+  difficulty      Difficulty
+  category        Category
+  description     String
+  examples        Json
+  constraints     String[]
+  hints           String[]
+  tags            String[]
+  starterCode     Json
+  solution        String?
+  timeComplexity  String?
+  spaceComplexity String?
+  leetcodeId      Int?           @unique
+  createdAt       DateTime       @default(now())
+  submissions     Submission[]
+  userProgress    UserProgress[]
+}
+
+model Submission {
+  id        String           @id @default(cuid())
+  userId    String
+  problemId String
+  code      String
+  language  String
+  status    SubmissionStatus
+  runtime   Int?
+  memory    Int?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem   Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model UserProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  problemId   String
+  solved      Boolean   @default(false)
+  attempts    Int       @default(0)
+  lastAttempt DateTime?
+  notes       String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem     Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+}
+
+model StudyPlan {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  problems   Json
+  targetDate DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
